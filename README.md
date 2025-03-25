@@ -44,3 +44,5 @@ Navigate to `http://localhost:5000` in your web browser.
 2. Choose annotation scheme (Chothia or Kabat)
 3. Click "Process File"
 4. View results and download processed files
+
+The layout of the web app is included in the repository as **Dashboard.png**.
