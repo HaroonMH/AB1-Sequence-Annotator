@@ -21,6 +21,16 @@
             padding: 15px;
             margin-bottom: 20px;
         }
+        .result-section {
+            background-color: #f8f9fa;
+            border-radius: 5px;
+            padding: 15px;
+            margin-top: 20px;
+        }
+        pre {
+            max-height: 300px;
+            overflow-y: auto;
+        }
     </style>
 </head>
 <body>
@@ -77,6 +87,48 @@
             
             <button type="submit" class="btn btn-primary">Process File</button>
         </form>
+
+        {% if analysis_results %}
+        <div class="result-section">
+            <h2>Analysis Results</h2>
+            
+            <div class="mb-3">
+                <h3>Original FASTA Sequence</h3>
+                <pre>{% for header, seq in analysis_results.original_fasta.items() %}{{ header }}
+{{ seq }}
+{% endfor %}</pre>
+            </div>
+            
+            <div class="mb-3">
+                <h3>Best Protein Frame</h3>
+                <pre>{{ analysis_results.best_protein }}</pre>
+            </div>
+            
+            <div class="mb-3">
+                <h3>Annotation Results</h3>
+                <h4>Regions:</h4>
+                <pre>{{ analysis_results.annotation_regions }}</pre>
+                
+                <h4>Number Mapping:</h4>
+                <pre>{{ analysis_results.number_mapping }}</pre>
+            </div>
+            
+            <div class="mt-4">
+                <h3>Download Results</h3>
+                <div class="btn-group" role="group">
+                    <a href="{{ url_for('download_file', filename=analysis_results.fasta_file) }}" class="btn btn-primary">
+                        Download Original FASTA
+                    </a>
+                    <a href="{{ url_for('download_file', filename=analysis_results.best_frame) }}" class="btn btn-success">
+                        Download Best Frame
+                    </a>
+                    <a href="{{ url_for('download_file', filename=analysis_results.annotation_result) }}" class="btn btn-info">
+                        Download Annotation Results
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endif %}
     </div>
 </body>
 </html>
