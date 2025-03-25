@@ -1,5 +1,3 @@
-# app.py
-
 import os
 import sys
 import numpy as np
@@ -347,6 +345,8 @@ def allowed_file(filename):
 
 @app.route('/', methods=['GET', 'POST'])
 def upload_file():
+    analysis_results = None
+    
     if request.method == 'POST':
         # Check if the post request has the file part
         if 'file' not in request.files:
@@ -405,22 +405,23 @@ def upload_file():
                         f.write("Number mapping:\n")
                         f.write(str(annotation_result[1]) + "\n")
                     
-                    return render_template('result.html', 
-                                           fasta_file='output_fasta.fa', 
-                                           best_frame='best_frame.fa', 
-                                           annotation_result='annotation_result.txt',
-                                           original_fasta=sequences,
-                                           best_protein=best_protein,
-                                           annotation_data=annotation_result)
+                    # Prepare analysis results to pass to template
+                    analysis_results = {
+                        'original_fasta': sequences,
+                        'best_protein': best_protein,
+                        'annotation_regions': annotation_result[0],
+                        'number_mapping': annotation_result[1],
+                        'fasta_file': 'output_fasta.fa',
+                        'best_frame': 'best_frame.fa',
+                        'annotation_result': 'annotation_result.txt'
+                    }
                 else:
                     flash('Failed to process the AB1 file. Check file quality or format.')
-                    return redirect(request.url)
             
             except Exception as e:
                 flash(f'An error occurred: {str(e)}')
-                return redirect(request.url)
     
-    return render_template('upload.html')
+    return render_template('upload.html', analysis_results=analysis_results)
 
 @app.route('/download/<filename>')
 def download_file(filename):
