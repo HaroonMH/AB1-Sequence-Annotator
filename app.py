@@ -1,12 +1,12 @@
 import os
-import sys
 import numpy as np
 from Bio import SeqIO
 import shutil
 import requests
-import textwrap
+import pandas as pd
 
-from flask import Flask, render_template, request, send_file, flash, redirect, url_for
+
+from flask import Flask, render_template, request, send_file, flash, redirect
 from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
@@ -348,72 +348,87 @@ def upload_file():
     analysis_results = None
     
     if request.method == 'POST':
-        # Check if the post request has the file part
         if 'file' not in request.files:
             flash('No file part')
             return redirect(request.url)
         
         file = request.files['file']
         
-        # If user does not select file, browser also
-        # submit an empty part without filename
         if file.filename == '':
             flash('No selected file')
             return redirect(request.url)
         
-        # Get annotation scheme
         annotation_scheme = request.form.get('annotation_scheme', 'chothia')
         
         if file and allowed_file(file.filename):
-            # Save the uploaded file
             filename = secure_filename(file.filename)
             filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
             file.save(filepath)
             
-            # Process the AB1 file
             try:
-                # Step 1: Convert AB1 to FASTA
+                base_name = os.path.splitext(filename)[0]
+                
                 fasta_result = process_ab1_file(filepath)
                 
                 if fasta_result:
-                    # Step 2: Read the FASTA file
                     sequences = read_fasta(fasta_result['fa'])
-                    
-                    # Step 3: Generate frames
                     sequences_frames = gen_frames(sequences)
-                    
-                    # Step 4: Find best proteins
                     proteins = find_prots(sequences_frames)
-                    
-                    # Step 5: Annotate the best protein
                     best_protein = list(proteins.values())[0]
                     annotation_obj = annotate(best_protein, annotation_scheme)
                     annotation_result = annotation_obj.retrieve()
-                    
-                    # Prepare files for download
-                    with open(os.path.join(app.config['UPLOAD_FOLDER'], 'output_fasta.fa'), 'w') as f:
+
+                    output_fasta = f"{base_name}_output_fasta.fa"
+                    best_frame = f"{base_name}_best_frame.fa"
+                    annotation_result_file = f"{base_name}_annotation_result.txt"
+                    excel_file = f"{base_name}_annotation_summary.xlsx"
+                    vh_vl_fasta = f"{base_name}_vh_vl_full_length.fa"
+
+                    with open(os.path.join(app.config['UPLOAD_FOLDER'], output_fasta), 'w') as f:
                         for header, seq in sequences.items():
                             f.write(f"{header}\n{seq}\n")
                     
-                    with open(os.path.join(app.config['UPLOAD_FOLDER'], 'best_frame.fa'), 'w') as f:
-                        f.write(f">Best Protein Frame\n{best_protein}\n")
+                    with open(os.path.join(app.config['UPLOAD_FOLDER'], best_frame), 'w') as f:
+                        f.write(f">{base_name}_Best_Protein_Frame\n{best_protein}\n")
                     
-                    with open(os.path.join(app.config['UPLOAD_FOLDER'], 'annotation_result.txt'), 'w') as f:
+                    with open(os.path.join(app.config['UPLOAD_FOLDER'], annotation_result_file), 'w') as f:
                         f.write(f"Annotation Scheme: {annotation_scheme}\n\n")
                         f.write("Regions:\n")
                         f.write(str(annotation_result[0]) + "\n\n")
                         f.write("Number mapping:\n")
                         f.write(str(annotation_result[1]) + "\n")
-                    
-                    # Prepare analysis results to pass to template
+
+                    # Excel and VH/VL FASTA generation
+                    chain_type = 'Heavy' if any(k.startswith('H-') for k in annotation_result[0].keys()) else 'Light'
+                    cdr1 = annotation_result[0].get(f'{chain_type[0]}-CDR1', '')
+                    cdr2 = annotation_result[0].get(f'{chain_type[0]}-CDR2', '')
+                    cdr3 = annotation_result[0].get(f'{chain_type[0]}-CDR3', '')
+                    full_sequence = ''.join(annotation_result[1].values())
+
+                    df = pd.DataFrame({
+                        'Name': [filename],
+                        'Heavy or Light Chain': [chain_type],
+                        'VH/VL Full Length Sequence': [full_sequence],
+                        'CDR1': [cdr1],
+                        'CDR2': [cdr2],
+                        'CDR3': [cdr3]
+                    })
+                    df.to_excel(os.path.join(app.config['UPLOAD_FOLDER'], excel_file), index=False)
+
+                    with open(os.path.join(app.config['UPLOAD_FOLDER'], vh_vl_fasta), 'w') as f:
+                        f.write(f">{base_name}_VHVL\n{full_sequence}\n")
+
                     analysis_results = {
                         'original_fasta': sequences,
                         'best_protein': best_protein,
                         'annotation_regions': annotation_result[0],
                         'number_mapping': annotation_result[1],
-                        'fasta_file': 'output_fasta.fa',
-                        'best_frame': 'best_frame.fa',
-                        'annotation_result': 'annotation_result.txt'
+                        'fasta_file': output_fasta,
+                        'best_frame': best_frame,
+                        'annotation_result': annotation_result_file,
+                        'excel_file': excel_file,
+                        'vh_vl_fasta': vh_vl_fasta,
+                        'base_name': base_name  
                     }
                 else:
                     flash('Failed to process the AB1 file. Check file quality or format.')
