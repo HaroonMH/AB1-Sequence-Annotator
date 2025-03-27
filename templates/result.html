@@ -64,6 +64,12 @@
                 <a href="{{ url_for('download_file', filename=annotation_result) }}" class="btn btn-info">
                     Download Annotation Results
                 </a>
+                <a href="{{ url_for('download_file', filename=excel_file) }}" class="btn btn-warning">
+                    Download Excel Summary
+                </a>
+                <a href="{{ url_for('download_file', filename=vh_vl_fasta) }}" class="btn btn-secondary">
+                    Download VH/VL FASTA
+                </a>
             </div>
             <a href="{{ url_for('upload_file') }}" class="btn btn-secondary mt-3">
                 Process Another File
