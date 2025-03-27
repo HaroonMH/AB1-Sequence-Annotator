@@ -4,3 +4,4 @@ numpy
 requests
 werkzeug
 pandas
+openpyxl
