@@ -125,6 +125,12 @@
                     <a href="{{ url_for('download_file', filename=analysis_results.annotation_result) }}" class="btn btn-info">
                         Download Annotation Results
                     </a>
+                    <a href="{{ url_for('download_file', filename=analysis_results.excel_file) }}" class="btn btn-warning">
+                        Download Excel Summary
+                    </a>
+                    <a href="{{ url_for('download_file', filename=analysis_results.vh_vl_fasta) }}" class="btn btn-secondary">
+                        Download VH/VL FASTA
+                    </a>
                 </div>
             </div>
         </div>
