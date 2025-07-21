@@ -33,23 +33,27 @@
         
         <div class="result-section">
             <h3>Original FASTA Sequence</h3>
-            <pre>{% for header, seq in original_fasta.items() %}{{ header }}
+            <pre>
+{% for header, seq in original_fasta.items() %}
+{{ header }}
 {{ seq }}
-{% endfor %}</pre>
+
+{% endfor %}
+            </pre>
         </div>
         
         <div class="result-section">
             <h3>Best Protein Frame</h3>
-            <pre>{{ best_protein }}</pre>
+            <pre>{{ best_protein | default('N/A') }}</pre>
         </div>
         
         <div class="result-section">
             <h3>Annotation Results</h3>
             <h4>Regions:</h4>
-            <pre>{{ annotation_data[0] }}</pre>
+            <pre>{{ annotation_data[0] | default('N/A') }}</pre>
             
             <h4>Number Mapping:</h4>
-            <pre>{{ annotation_data[1] }}</pre>
+            <pre>{{ annotation_data[1] | default('N/A') }}</pre>
         </div>
         
         <div class="mt-4">
