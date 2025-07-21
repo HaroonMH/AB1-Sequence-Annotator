@@ -94,23 +94,27 @@
             
             <div class="mb-3">
                 <h3>Original FASTA Sequence</h3>
-                <pre>{% for header, seq in analysis_results.original_fasta.items() %}{{ header }}
+                <pre>
+{% for header, seq in analysis_results.original_fasta.items() %}
+{{ header }}
 {{ seq }}
-{% endfor %}</pre>
+
+{% endfor %}
+                </pre>
             </div>
             
             <div class="mb-3">
                 <h3>Best Protein Frame</h3>
-                <pre>{{ analysis_results.best_protein }}</pre>
+                <pre>{{ analysis_results.best_protein | default('N/A') }}</pre>
             </div>
             
             <div class="mb-3">
                 <h3>Annotation Results</h3>
                 <h4>Regions:</h4>
-                <pre>{{ analysis_results.annotation_regions }}</pre>
+                <pre>{{ analysis_results.annotation[0] | default('N/A') }}</pre>
                 
                 <h4>Number Mapping:</h4>
-                <pre>{{ analysis_results.number_mapping }}</pre>
+                <pre>{{ analysis_results.annotation[1] | default('N/A') }}</pre>
             </div>
             
             <div class="mt-4">
